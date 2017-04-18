@@ -1,0 +1,2 @@
+#!/usr/bin/bash
+echo -e "RESET\r" > $1 && sleep 0.2 && avrdude -v -patmega328p -carduino -P$1 -b57600 -D -Uflash:w:termocouple_test.ino.eightanaloginputs.hex:i 
