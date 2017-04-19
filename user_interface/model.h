@@ -3,7 +3,8 @@
 
 typedef enum {
     STATE_IDLE,
-    STATE_AUTO,
+    STATE_SETPOINT,
+    STATE_PROGRAM,
     STATE_MANUAL
 } State_t;
 
@@ -19,6 +20,6 @@ typedef struct {
 
 Model_t model = {0, 115, 10, 20, 30, STATE_IDLE};
 
-const char * const states[1][3] = {{"IDLE", "AUTO", "MANUAL"}};
+const char * const states[1][4] = {{"IDLE", "SETPOINT", "PROGRAM", "MANUAL"}};
 
 #endif

@@ -1,6 +1,6 @@
 #include "micromenu.h"
 #include "model.h"
-#define STATE_OPTIONS_MAX 2
+#define STATE_OPTIONS_MAX 3
 
 const extern MenuItem_t Root_Setpoint;
 const extern MenuItem_t Root_Display;
@@ -10,17 +10,13 @@ const extern MenuItem_t Root_Temp;
 const extern MenuItem_t Menu_State_Dialog;
 const extern MenuItem_t Menu_SetSetpoint_Dialog;
 
-const char * const STR_TIME[]={"Menu 1"};
-const char * const STR_WEEKDAY[]={"Menu 2"};
-const char * const STR_TEMP[]={"Menu 3"};
 const char * const STR_SETPOINT[]={"SETPOINT"};
-const char * const STR_GRIB[]={"Grib"};
 const char * const STR_SET_MODE[]={"Set mode:"};
 const char * const STR_SET_SETPOINT[]={"Setpoint:"};
 
 //MENU_ITEM(Name, Next, Previous, Parent, Child, GetLine1Func, GetLine2Func, line1, line2)
 
-const char * const STR_STATE[]={"IDLE", "AUTO", "MANUAL"};
+const char * const STR_STATE[]={"IDLE", "SETPOINT", "PROGRAM", "MANUAL"};
 
 void menuGetState() {
 	sprintf(lcdBuf, "%s", STR_STATE[model.state]);
