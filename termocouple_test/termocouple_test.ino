@@ -21,11 +21,26 @@ MAX31855 tc(clPin, csPin, doPin);
 Encoder encoder(encode1, encode2);
 Messenger message = Messenger();
 
+#define refreshPeriod 500
+
 unsigned long timeToSend = 0;
 double Setpoint, Input, Output;
-PID myPID(&Input, &Output, &Setpoint,500,1,100, DIRECT);
+PID myPID(&Input, &Output, &Setpoint,200,0,0, DIRECT);
 int WindowSize = 2000;
 unsigned long windowStartTime;
+unsigned long refreshTime;
+unsigned int power=0;
+float temp;
+float ambient;
+
+enum modes {
+    IDLE,
+    POWER,
+    POINT,
+    PROGR
+} mode = IDLE;
+
+char mode_str[4][6] = {"IDLE ", "POWER", "POINT", "PROGR"};
 
 void setup()
 {
@@ -34,58 +49,141 @@ void setup()
   lcd.backlight();
   tc.begin();
   pinMode(ssr, OUTPUT);
-  digitalWrite(ssr, HIGH);
+  digitalWrite(ssr, LOW);
   pinMode(ledr, OUTPUT);
   pinMode(ledg, OUTPUT);
   pinMode(buttEnc, INPUT);
   pinMode(buttRed, INPUT);
   message.attach(message_ready);
   windowStartTime = millis();
-  Setpoint = 25;
+  refreshTime = millis();
+  Setpoint = 15;
   myPID.SetOutputLimits(0, WindowSize);
   myPID.SetSampleTime(1000);
-  myPID.SetMode(AUTOMATIC);  //turn the PID on
+  myPID.SetMode(MANUAL);  //turn the PID on
 }
 
 void resetFunc(){
+  digitalWrite(ssr, LOW);
   asm("jmp 0x3800");
 }
 
 char buffer[30];
 
+void printStatus(){
+  Serial.print(millis());
+  Serial.print(",");
+  Serial.print(Output);
+  Serial.print(",");
+  Serial.print(Setpoint);
+  Serial.print(",");
+//  Serial.print(mode);
+//  Serial.print(",");
+  Serial.print(ambient);
+  Serial.print(",");
+  Serial.print(temp);
+  Serial.println();
+}
+
 void message_ready() {
     while (message.available()) {
-      if ( message.checkString("RESET") ) {
+      if (message.checkString("RESET") ) {
         resetFunc();
-      }
-      else{
+      }else if (message.checkString("point") ) {
+        Setpoint = message.readInt();
+        Serial.print("Setpoint :");
+        Serial.println(Setpoint);
+      }else if (message.checkString("power") ) {
+        power = message.readInt();
+        Serial.print("Power :");
+        Serial.println(power);
+      }else if (message.checkString("mode") ) {
+        chmod(message.readInt());
+        Serial.print(mode_str[mode]);
+        Serial.println(mode);
+      }else if (message.checkString("temp") ) {
+        Serial.print(temp);
+      }else if (message.checkString("status") ) {
+        printStatus();
+      }else if (message.checkString("help") ) {
+        Serial.println("RESET");
+        Serial.println("power <pwr>");
+        Serial.println("mode <mode>");
+        Serial.println("temp");
+        Serial.println("status");
+        Serial.println("help");
+      }else{
         message.copyString(buffer, 30);
+        Serial.print("bullshit");
         Serial.println(buffer);
       }
     }
 }
 
 
-long oldPosition  = -999;
+long oldPosition  = 0;
 bool lastButtonStateRed = HIGH;
 bool lastButtonStateEnc = HIGH;
-float temp;
-float ambient;
+bool newButtonStateRed;
+bool newButtonStateEnc;
+
+void chmod(modes newMode){
+  switch(newMode){
+    case IDLE :
+      myPID.SetMode(MANUAL);
+      pinMode(ssr, INPUT);
+    break;
+    case POWER :
+      myPID.SetMode(MANUAL);
+      pinMode(ssr, OUTPUT);
+    break;
+    case POINT :
+    //
+      pinMode(ssr, OUTPUT);
+      myPID.SetMode(AUTOMATIC);
+    break;
+    case PROGR :
+    //do program loading
+      pinMode(ssr, OUTPUT);
+      myPID.SetMode(AUTOMATIC);
+    break;
+  }
+  mode = newMode;
+}
 
 void refreshScr() {
+  printStatus();
   lcd.clear();
   lcd.setCursor(2,0);
   lcd.print(temp);
   lcd.setCursor(10,0);
-  lcd.print(ambient);
-  lcd.setCursor(2,1);
-  lcd.print(oldPosition>>2);
+  lcd.print(mode_str[mode]);
+  lcd.setCursor(0,1);
+  if (mode == IDLE){
+    lcd.print(buffer);
+  }
+  if (mode == POINT){
+    lcd.print("Set ");
+    lcd.print(Setpoint +(float) oldPosition /16);
+  }
+  if (mode == PROGR){
+    lcd.print("Set ");
+    lcd.print(Setpoint +(float) oldPosition /16);
+  }
+  if (mode == POWER){
+    lcd.print("Pwr ");
+    lcd.print(power);    
+  }
+
 }
 
+static byte checkbutton(){
+  return ((LOW == newButtonStateRed) && (HIGH == lastButtonStateRed));
+}
 void loop()
 {
-  bool newButtonStateRed = digitalRead(buttRed);
-  bool newButtonStateEnc = digitalRead(buttEnc);
+  newButtonStateRed = digitalRead(buttRed);
+  newButtonStateEnc = digitalRead(buttEnc);
   int status = tc.read();
   if (status != 0) 
   {
@@ -107,18 +205,31 @@ void loop()
     digitalWrite(ledr, !digitalRead(ledr));
   }
   if((LOW == newButtonStateEnc) && (HIGH == lastButtonStateEnc)){
-    digitalWrite(ledg, !digitalRead(ledg));
+    //digitalWrite(ledg, !digitalRead(ledg));
+    Setpoint+= (float) oldPosition /16;
+    encoder.write(0);
   }
   lastButtonStateRed = newButtonStateRed;
   lastButtonStateEnc = newButtonStateEnc;
   Input=temp;
+
+  
   myPID.Compute();
+  if (POWER == mode){
+    Output = power;
+  }
   long now = millis();
   if(now - windowStartTime>WindowSize)
   { //time to shift the Relay Window
     windowStartTime += WindowSize;
-    refreshScr();
   }
+
+  if(now - refreshTime>refreshPeriod){
+    refreshScr();
+    refreshTime +=refreshPeriod;
+  }
+
+//TODO: use only descrete output 10ms intervals
   if(Output < now - windowStartTime) digitalWrite(ssr,LOW);
   else digitalWrite(ssr,HIGH);
 
