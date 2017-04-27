@@ -10,6 +10,7 @@ void ProgramProfile::stepInit(uint16_t currTemp) {
   stepStartTemperature = currTemp;
   programStepPhase = PHASE_RAMP;
   stepStartTs = millis();
+  lastProgramInvocationTs = millis();
 }
 
 uint8_t ProgramProfile::isMoreStepsLeft() {
@@ -31,6 +32,7 @@ uint8_t ProgramProfile::isTargetSetpointReached(uint16_t currTemp) {
 
 void ProgramProfile::start(uint16_t currTemp) {
   currentStep = 0;
+  programIsDone = 0;
   stepInit(currTemp);
 }
 
@@ -50,9 +52,9 @@ void ProgramProfile::compute(uint16_t currTemp) {
     } else {
       uint16_t newSetpoint = computeSetpoint();
       setpointCallback(newSetpoint);
+      lastProgramInvocationTs = millis();
     }
   } 
-  lastProgramInvocationTs = millis();
 }
 
 /**
