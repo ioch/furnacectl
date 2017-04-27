@@ -22,11 +22,12 @@ Encoder encoder(encode1, encode2);
 Messenger message = Messenger();
 
 #define refreshPeriod 500
-
 unsigned long timeToSend = 0;
+
 double Setpoint, Input, Output;
 PID myPID(&Input, &Output, &Setpoint,200,0,0, DIRECT);
 int WindowSize = 2000;
+
 unsigned long windowStartTime;
 unsigned long refreshTime;
 unsigned int power=0;
@@ -68,8 +69,6 @@ void resetFunc(){
   asm("jmp 0x3800");
 }
 
-char buffer[30];
-
 void printStatus(){
   Serial.print(millis());
   Serial.print(",");
@@ -84,6 +83,8 @@ void printStatus(){
   Serial.print(temp);
   Serial.println();
 }
+
+char buffer[30];
 
 void message_ready() {
     while (message.available()) {
