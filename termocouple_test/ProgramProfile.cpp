@@ -29,12 +29,12 @@ uint8_t ProgramProfile::isTargetSetpointReached(uint16_t currTemp) {
   return currTemp >= program[currentStep].targetTemp;
 }
 
-void ProgramProfile::programStart(uint16_t currTemp) {
+void ProgramProfile::start(uint16_t currTemp) {
   currentStep = 0;
   stepInit(currTemp);
 }
 
-void ProgramProfile::programCompute(uint16_t currTemp) {
+void ProgramProfile::compute(uint16_t currTemp) {
   if(programShouldAdvance()) {
     if(isMoreStepsLeft()) {
       currentStep = currentStep + 1;

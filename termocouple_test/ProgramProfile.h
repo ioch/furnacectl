@@ -28,8 +28,8 @@ public:
 		setpointCallback = spCallback;
 		programDoneCallback = pdCallback;
 	}
-	void programStart(uint16_t currTemp);
-	void programCompute(uint16_t currTemp);
+	void start(uint16_t currTemp);
+	void compute(uint16_t currTemp);
 
 private:
 	void (*setpointCallback)(uint16_t);

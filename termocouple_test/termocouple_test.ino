@@ -4,6 +4,7 @@
 #include <Encoder.h>
 #include <Messenger.h>
 #include <PID_v1.h>
+#include "ProgramProfile.h"
 
 static const byte doPin = 12;
 static const byte csPin = 10;
@@ -16,10 +17,14 @@ static const byte ledr = 7;
 static const byte ledg = 6;
 static const byte ssr = A2;
 
+void updateSetpoint(uint16_t sp);
+void programDone();
+
 LiquidCrystal_I2C lcd(0x27,20,4);
 MAX31855 tc(clPin, csPin, doPin);
 Encoder encoder(encode1, encode2);
 Messenger message = Messenger();
+ProgramProfile program(updateSetpoint, programDone);
 
 #define refreshPeriod 500
 unsigned long timeToSend = 0;
@@ -239,6 +244,15 @@ void loop() {
   while (Serial.available()) {
     message.process(Serial.read());
   }
+
+  program.compute(temp);
 }
 
+void updateSetpoint(uint16_t sp) {
+
+}
+
+void programDone() {
+
+}
 
