@@ -8,7 +8,7 @@
 #endif
 
 #define STEP_NONE 255
-#define PROGRAM_IMVOCATION_INTERVAL 60000
+#define PROGRAM_IMVOCATION_INTERVAL 1000
 
 typedef enum{
   PHASE_RAMP,
@@ -41,7 +41,7 @@ private:
 	uint32_t lastProgramInvocationTs = 0;
 	uint32_t stepStartTs = 0;
 	uint8_t programIsDone = 0;
-	ProgamStep_t program[1] = {{0.83, 120, 30}};
+	ProgamStep_t program[1] = {{0.4, 120, 30}}; //{{0.83, 120, 30}}
 	uint8_t programStepsTotal = sizeof(program) / sizeof(program[0]);
 
 	uint8_t programShouldAdvance();

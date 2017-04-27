@@ -30,7 +30,7 @@ ProgramProfile program(updateSetpoint, programDone);
 unsigned long timeToSend = 0;
 
 double Setpoint, Input, Output;
-PID myPID(&Input, &Output, &Setpoint,200,0,0, DIRECT);
+PID myPID(&Input, &Output, &Setpoint,40,0,0, DIRECT);
 int WindowSize = 2000;
 
 unsigned long windowStartTime;
@@ -150,6 +150,7 @@ void chmod(modes newMode){
     case PROGR :
     //do program loading
       pinMode(ssr, OUTPUT);
+      program.start(temp);
       myPID.SetMode(AUTOMATIC);
     break;
   }
@@ -173,7 +174,7 @@ void refreshScr() {
   }
   if (mode == PROGR){
     lcd.print("Set ");
-    lcd.print(Setpoint +(float) oldPosition /16);
+    lcd.print(Setpoint);
   }
   if (mode == POWER){
     lcd.print("Pwr ");
@@ -249,10 +250,10 @@ void loop() {
 }
 
 void updateSetpoint(uint16_t sp) {
-
+    Setpoint = sp;
 }
 
 void programDone() {
-
+  chmod(IDLE);
 }
 
