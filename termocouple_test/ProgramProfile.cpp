@@ -6,7 +6,7 @@ uint8_t ProgramProfile::programShouldAdvance() {
           (millis() - stepStartTs) / 60000 > program[currentStep].minutesAtTarget);
 }
 
-void ProgramProfile::stepInit(uint16_t currTemp) {
+void ProgramProfile::stepInit(float currTemp) {
   stepStartTemperature = currTemp;
   programStepPhase = PHASE_RAMP;
   stepStartTs = millis();
@@ -22,7 +22,7 @@ uint8_t ProgramProfile::isTimeToRamp() {
          millis() - lastProgramInvocationTs > PROGRAM_IMVOCATION_INTERVAL;
 }
 
-uint16_t ProgramProfile::computeSetpoint() {
+float ProgramProfile::computeSetpoint() {
   return stepStartTemperature + (millis() - stepStartTs) / 60000 * program[currentStep].rampDegreesPerMinute;
 }
 
@@ -30,13 +30,13 @@ uint8_t ProgramProfile::isTargetSetpointReached(uint16_t currTemp) {
   return currTemp >= program[currentStep].targetTemp;
 }
 
-void ProgramProfile::start(uint16_t currTemp) {
+void ProgramProfile::start(float currTemp) {
   currentStep = 0;
   programIsDone = 0;
   stepInit(currTemp);
 }
 
-void ProgramProfile::compute(uint16_t currTemp) {
+void ProgramProfile::compute(float currTemp) {
   if(programShouldAdvance()) {
     if(isMoreStepsLeft()) {
       currentStep = currentStep + 1;
@@ -50,7 +50,7 @@ void ProgramProfile::compute(uint16_t currTemp) {
       programStepPhase = PHASE_SOAK;
       stepStartTs = millis();
     } else {
-      uint16_t newSetpoint = computeSetpoint();
+      float newSetpoint = computeSetpoint();
       if(newSetpoint > program[currentStep].targetTemp) {
         newSetpoint = program[currentStep].targetTemp;
       }

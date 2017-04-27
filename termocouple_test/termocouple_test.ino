@@ -3,7 +3,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <Encoder.h>
 #include <Messenger.h>
-#include <PID_v1.h>
+//#include <PID_v1.h>
 #include "ProgramProfile.h"
 
 static const byte doPin = 12;
@@ -17,7 +17,7 @@ static const byte ledr = 7;
 static const byte ledg = 6;
 static const byte ssr = A2;
 
-void updateSetpoint(uint16_t sp);
+void updateSetpoint(float sp);
 void programDone();
 
 LiquidCrystal_I2C lcd(0x27,20,4);
@@ -26,12 +26,18 @@ Encoder encoder(encode1, encode2);
 Messenger message = Messenger();
 ProgramProfile program(updateSetpoint, programDone);
 
+#define heatLoss 3.2
+#define Kp 40
+#define maxOutput 2000
+#define minOutput 0
+
 #define refreshPeriod 500
 unsigned long timeToSend = 0;
 
 double Setpoint, Input, Output;
-PID myPID(&Input, &Output, &Setpoint,40,0,0, DIRECT);
+//PID myPID(&Input, &Output, &Setpoint,40,0,0, DIRECT);
 int WindowSize = 2000;
+bool isAuto = false;
 
 unsigned long windowStartTime;
 unsigned long refreshTime;
@@ -63,9 +69,9 @@ void setup() {
   windowStartTime = millis();
   refreshTime = millis();
   Setpoint = 15;
-  myPID.SetOutputLimits(0, WindowSize);
-  myPID.SetSampleTime(1000);
-  myPID.SetMode(MANUAL);  //turn the PID on
+//  myPID.SetOutputLimits(0, WindowSize);
+//  myPID.SetSampleTime(1000);
+//  myPID.SetMode(MANUAL);  //turn the PID on
 }
 
 void resetFunc(){
@@ -135,23 +141,27 @@ bool newButtonStateEnc;
 void chmod(modes newMode){
   switch(newMode){
     case IDLE :
-      myPID.SetMode(MANUAL);
+      isAuto = false;
+//      myPID.SetMode(MANUAL);
       pinMode(ssr, INPUT);
     break;
     case POWER :
-      myPID.SetMode(MANUAL);
+      isAuto = false;
+//      myPID.SetMode(MANUAL);
       pinMode(ssr, OUTPUT);
     break;
     case POINT :
     //
       pinMode(ssr, OUTPUT);
-      myPID.SetMode(AUTOMATIC);
+      isAuto = true;
+//      myPID.SetMode(AUTOMATIC);
     break;
     case PROGR :
     //do program loading
       pinMode(ssr, OUTPUT);
       program.start(temp);
-      myPID.SetMode(AUTOMATIC);
+      isAuto = true;
+//      myPID.SetMode(AUTOMATIC);
     break;
   }
   mode = newMode;
@@ -187,6 +197,17 @@ static byte checkbutton(){
   return ((LOW == newButtonStateRed) && (HIGH == lastButtonStateRed));
 }
 
+
+bool computeOutput(){
+  if(!isAuto) return false;
+  float error = Setpoint - temp;
+  float bias = (Setpoint - ambient)*heatLoss;
+  Output = error*Kp + bias;
+  if(Output > maxOutput) Output = maxOutput;
+  else if (Output < minOutput) Output = minOutput;
+  return true;
+}
+
 void loop() {
   newButtonStateRed = digitalRead(buttRed);
   newButtonStateEnc = digitalRead(buttEnc);
@@ -199,8 +220,6 @@ void loop() {
 
   temp = tc.getTemperature();
   ambient = tc.getInternal();
-//  Serial.println(temp);
-  
 
   long newPosition = encoder.read();
   if (newPosition != oldPosition) {
@@ -220,7 +239,8 @@ void loop() {
   Input=temp;
 
   
-  myPID.Compute();
+//  myPID.Compute();
+  computeOutput();
   if (POWER == mode){
     Output = power;
   }
@@ -249,11 +269,13 @@ void loop() {
   program.compute(temp);
 }
 
-void updateSetpoint(uint16_t sp) {
+void updateSetpoint(float sp) {
     Setpoint = sp;
 }
 
+
 void programDone() {
+  Setpoint = 10;
   chmod(IDLE);
 }
 
