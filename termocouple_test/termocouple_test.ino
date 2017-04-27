@@ -43,8 +43,7 @@ enum modes {
 
 char mode_str[4][6] = {"IDLE ", "POWER", "POINT", "PROGR"};
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   lcd.init();
   lcd.backlight();
@@ -181,8 +180,8 @@ void refreshScr() {
 static byte checkbutton(){
   return ((LOW == newButtonStateRed) && (HIGH == lastButtonStateRed));
 }
-void loop()
-{
+
+void loop() {
   newButtonStateRed = digitalRead(buttRed);
   newButtonStateEnc = digitalRead(buttEnc);
   int status = tc.read();
@@ -219,22 +218,27 @@ void loop()
   if (POWER == mode){
     Output = power;
   }
+
   long now = millis();
-  if(now - windowStartTime>WindowSize)
-  { //time to shift the Relay Window
-    windowStartTime += WindowSize;
+  if(now - windowStartTime > WindowSize) {
+    windowStartTime = now;
   }
 
-  if(now - refreshTime>refreshPeriod){
+  if(now - refreshTime > refreshPeriod) {
     refreshScr();
-    refreshTime +=refreshPeriod;
+    refreshTime  = now;
   }
 
 //TODO: use only descrete output 10ms intervals
-  if(Output < now - windowStartTime) digitalWrite(ssr,LOW);
-  else digitalWrite(ssr,HIGH);
+  if(Output < now - windowStartTime) {
+    digitalWrite(ssr,LOW);
+  } else {
+    digitalWrite(ssr,HIGH);
+  }
 
   while (Serial.available()) {
     message.process(Serial.read());
   }
 }
+
+
