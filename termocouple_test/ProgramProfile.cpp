@@ -51,6 +51,9 @@ void ProgramProfile::compute(uint16_t currTemp) {
       stepStartTs = millis();
     } else {
       uint16_t newSetpoint = computeSetpoint();
+      if(newSetpoint > program[currentStep].targetTemp) {
+        newSetpoint = program[currentStep].targetTemp;
+      }
       setpointCallback(newSetpoint);
       lastProgramInvocationTs = millis();
     }
