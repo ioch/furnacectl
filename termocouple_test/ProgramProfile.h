@@ -17,7 +17,7 @@ typedef enum{
 
 typedef struct{
   float rampDegreesPerMinute;
-  uint16_t targetTemp;
+  float targetTemp;
   uint16_t minutesAtTarget;
 } ProgamStep_t;
 
@@ -28,27 +28,27 @@ public:
 		setpointCallback = spCallback;
 		programDoneCallback = pdCallback;
 	}
-	void start(uint16_t currTemp);
-	void compute(uint16_t currTemp);
+	void start(float currTemp);
+	void compute(float currTemp);
 
 private:
-	void (*setpointCallback)(uint16_t);
+	void (*setpointCallback)(float);
 	void (*programDoneCallback) (void);
-	uint16_t stepStartTemperature = 0;
+	float stepStartTemperature = 0;
 	ProgramStepPhase_t programStepPhase = PHASE_RAMP;
 	uint8_t currentStep = STEP_NONE;
 
 	uint32_t lastProgramInvocationTs = 0;
 	uint32_t stepStartTs = 0;
 	uint8_t programIsDone = 0;
-	ProgamStep_t program[1] = {{0.4, 120, 30}}; //{{0.83, 120, 30}}
+	ProgamStep_t program[1] = {{0.8, 120, 30}}; //{{0.83, 120, 30}}
 	uint8_t programStepsTotal = sizeof(program) / sizeof(program[0]);
 
 	uint8_t programShouldAdvance();
-	void stepInit(uint16_t currTemp);
+	void stepInit(float currTemp);
 	uint8_t isMoreStepsLeft();
 	uint8_t isTimeToRamp();
-	uint16_t computeSetpoint();
+	float computeSetpoint();
 	uint8_t isTargetSetpointReached(uint16_t currTemp);
 };
 
