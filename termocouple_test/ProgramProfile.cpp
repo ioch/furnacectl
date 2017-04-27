@@ -49,7 +49,7 @@ void ProgramProfile::compute(float currTemp) {
     if(isTargetSetpointReached(currTemp)) {
       programStepPhase = PHASE_SOAK;
       stepStartTs = millis();
-      setpointCallback(newSetpoint);
+      setpointCallback(program[currentStep].targetTemp);
     } else {
       float newSetpoint = computeSetpoint();
       if(newSetpoint > program[currentStep].targetTemp) {

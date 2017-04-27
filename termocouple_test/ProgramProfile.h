@@ -24,7 +24,7 @@ typedef struct{
 class ProgramProfile
 {
 public:
-	ProgramProfile(void (*spCallback)(uint16_t), void (*pdCallback) (void)) {
+	ProgramProfile(void (*spCallback)(float), void (*pdCallback) (void)) {
 		setpointCallback = spCallback;
 		programDoneCallback = pdCallback;
 	}
